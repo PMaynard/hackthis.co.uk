@@ -27,11 +27,13 @@ CREATE TABLE users_oauth (
 
 CREATE TABLE users_levels (
 	`user_id` int(7) NOT NULL,
-	`level_id` int(3) NOT NULL,
-	`time` timestamp DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (`user_id`),
+	`level_id` tinyint(3) UNSIGNED NOT NULL,
+	`started` timestamp DEFAULT CURRENT_TIMESTAMP,
+	`completed` timestamp,
+	`attempts` smallint(3) UNSIGNED DEFAULT 0,
+	PRIMARY KEY (`user_id`, `level_id`),
 	FOREIGN KEY (`user_id`) REFERENCES users (`user_id`)
-	-- FOREIGN KEY (`level_id`) REFERENCES levels (`level_id`)
+	-- Level constraint added later
 ) ENGINE=InnoDB;
 
 CREATE TABLE users_profile (
@@ -166,6 +168,27 @@ CREATE TABLE users_medals (
 	FOREIGN KEY (`medal_id`) REFERENCES medals (`medal_id`)
 ) ENGINE=InnoDB;
 
+
+/*
+	LEVELS
+*/
+CREATE TABLE levels_groups (
+	`title` varchar(16),
+	`order` tinyint(1),
+	PRIMARY KEY (`title`)
+) ENGINE=InnoDB;
+
+CREATE TABLE levels (
+	`level_id` tinyint(3) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`name` varchar(8) NOT NULL,
+	`group` varchar(16) NOT NULL,
+	PRIMARY KEY (`level_id`),
+	UNIQUE (`name`, `group`),
+	FOREIGN KEY (`group`) REFERENCES levels_groups (`title`)
+) ENGINE=InnoDB;
+
+ALTER TABLE users_levels
+ADD FOREIGN KEY (`level_id`) REFERENCES levels (`level_id`);
 
 /*
 	MESSAGES
@@ -359,10 +382,12 @@ CREATE PROCEDURE user_feed_remove(_user_id INT, _type TEXT, _item_id INT)
 
 -- When a user completes a level and an item is added to users_levels
 -- Give user the relevant score and add to users feed
-DROP TRIGGER IF EXISTS insert_user_level;
-CREATE TRIGGER insert_user_level AFTER INSERT ON users_levels FOR EACH ROW
+DROP TRIGGER IF EXISTS update_user_level;
+CREATE TRIGGER update_user_level AFTER UPDATE ON users_levels FOR EACH ROW
 	BEGIN
-		CALL user_feed(NEW.user_id, 'level', NEW.level_id);
+		IF NEW.completed > 0 THEN
+			CALL user_feed(NEW.user_id, 'level', NEW.level_id);
+		END IF;
 	END;
 
 DROP TRIGGER IF EXISTS delete_user_level;

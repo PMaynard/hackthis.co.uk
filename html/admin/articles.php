@@ -1,18 +1,53 @@
 <?php
+    $custom_css = array('articles.scss');
     define("PAGE_PRIV", "admin_pub");
 
     require_once('header.php');
 
-    $articles = new articles();
+    if (!isset($_GET['action'])) {
+        $limit = 25;
+        $page = (isset($_GET['page']) && is_numeric($_GET['page']))?$_GET['page']:1;
 
-    if (!isset($_GET['action'])):
+        $articleList = $app->articles->getMyArticles(false, $limit, $page);
 ?>
-
-
+                            <table class='striped'>
+                                <thead>
+                                    <tr>
+                                        <th>&nbsp;</th>
+                                        <th width='25px'></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
 <?php
-    else:
+        foreach ($articleList['articles'] as $article):
+            $article->title = $app->parse($article->title, false);
+?>
+                                    <tr class='<?=($article->note?'declined':'awaiting');?>'>
+                                        <td><a href='/articles/view.php?id=<?=$article->id;?>'><?=$article->title;?></a> <span class='dark'>&middot; <?=$article->cat_title;?></a></td>
+<?php       if ($article->note): ?>
+                                        <td class='center'><span class='hint--left' data-hint='Declined: <?=str_replace("'", '`', str_replace("<br />", "", $app->parse($article->note, false, false)));?>'><i class='icon-cross'></i></span></td>
+<?php       else: ?>
+                                        <td class='center'><span class='hint--left' data-hint='Awaiting review'><i class='icon-eye'></i></span></td>
+<?php       endif; ?>
+                                    </tr>
+<?php
+        endforeach;
+?>
+                                </tbody>
+                            </table>
+<?php
+
+        if (ceil($articleList['total']/$limit) > 1) {
+            $pagination = new stdClass();
+            $pagination->current = $articleList['page'];
+            $pagination->count = ceil($articleList['total']/$limit);
+            $pagination->root = '?page=';
+            include('elements/pagination.php');
+        }
+
+    } else {
         if ($_GET['action'] === 'edit'):
-            $article = $articles->getArticle($_GET['slug'], 'all');
+            $article = $app->articles->getArticle($_GET['slug'], 'all');
 
             if (!$article):
 ?>
@@ -26,7 +61,7 @@
                 if (isset($_POST['body'])) {
                     $changes = array('title'=>$_POST['title'], 'body'=>$_POST['body'], 'category_id'=>$_POST['category']);
 
-                    $updated = $articles->updateArticle($article->id, $changes, isset($_POST['update']));
+                    $updated = $app->articles->updateArticle($article->id, $changes, isset($_POST['update']));
                     if ($updated) {
                         $uri = "http://{$_SERVER[HTTP_HOST]}{$_SERVER[REQUEST_URI]}";
                         if (!isset($_GET['update'])) $uri .= '&update';
@@ -62,9 +97,9 @@
             
                 <ul>
 <?php
-                $categories = articles::getCategories();
+                $categories = $app->articles->getCategories();
                 foreach($categories as $cat) {
-                    articles::printCategoryList($cat);
+                    $app->articles->printCategoryList($cat);
                 }
 ?>
                 </ul>
@@ -81,7 +116,7 @@
 <?php
             endif;
         endif; //$action = 'edit'
-    endif; //isset $_GET['action']
+    } //isset $_GET['action']
 
     require_once('footer.php');
 ?>

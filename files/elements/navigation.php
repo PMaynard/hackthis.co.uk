@@ -5,25 +5,36 @@
                     <ul>
                         <li><a href='/'>home</a></li>
 <?php
-    if ($user->loggedIn):
+    if ($app->user->loggedIn):
 ?>
-                        <li><a href='/'>levels</a>
-                            <ul>
-                                <li class='parent'><a href='/'>Main</a>
-                                    <ul>
-                                        <li><a href='/'>Level 1</a></li>
-                                        <li><a href='/'>Level 2</a></li>
-                                        <li><a href='/'>Level 3</a></li>
-                                    </ul>
+                        <li><a href='/levels'>levels</a>
+                        <ul>
+<?php
+        $levels = $app->levels->getList();
+        $lastGroup = '';
+        foreach($levels as $level):
+            if ($level->group !== $lastGroup):
+                if ($lastGroup !== ''):
+?>
+                            </ul></li>
+<?php
+            endif;
+            $lastGroup = $level->group;
+?>
+                            <li class='parent'><a href='/levels/<?=strtolower($level->group);?>'><?=$level->group;?></a><ul>
+<?php
+        endif;
+?>
+                                <li>
+                                    <a class="progress_<?=$level->completed;?>" href="<?=$level->uri;?>">
+                                        <span class="thumb_title">Level <?=$level->name;?></span>
+                                    </a>
                                 </li>
-                                <li class='parent'><a href='/'>Basic+</a>
-                                    <ul>
-                                        <li><a href='/'>Level 1</a></li>
-                                    </ul>
-                                </li>
-                                <li><a href='/'>Javascript</a></li>
-                            </ul>
-                        </li>
+<?php
+    endforeach;
+?>
+                            </ul></li>
+                        </ul></li>
 <?php
     else:
 ?>
@@ -31,7 +42,7 @@
 <?php
     endif;
 
-    $categories = articles::getCategories(null, false);
+    $categories = $app->articles->getCategories(null, false);
 ?>
                         <li><a href='/articles/'>articles</a>
                             <ul>
@@ -39,13 +50,13 @@
                                     <ul>
 <?php
     foreach($categories as $cat) {
-        articles::printCategoryList($cat, true);
+        $app->articles->printCategoryList($cat, true);
     }
 ?>
                                     </ul>
                                 </li>
 <?php
-    if ($user->loggedIn):
+    if ($app->user->loggedIn):
 ?>
                                 <li class='parent'><a href='/articles/me'>My Articles</a>
                                     <ul>
@@ -70,7 +81,7 @@
                         <li><a href='/'>contact us</a></li>
 
 <?php
-    if ($user->loggedIn):
+    if ($app->user->loggedIn):
 ?>
                         <li class='right icon mobile-hide'><a href='/'><i class="icon-menu"></i></a>
                             <ul>
@@ -81,23 +92,23 @@
                         <li class='mobile-only'><a href='/settings/'>Settings</a></li>
                         <li class='mobile-only'><a href='/?logout'>Logout</a></li>
 <?php
-        if ($user->admin):
+        if ($app->user->admin):
 ?>
                         <li class='right icon mobile-hide'><a href='/admin/'><i class="icon-lock"></i></a>
                             <ul>
 <?php
-            if ($user->admin_site_priv):
+            if ($app->user->admin_site_priv):
 ?>
                                 <li><a href='/admin/levels.php'>Levels</a></li>
                                 <li><a href='/admin/users.php'>Users</a></li>
 <?php
             endif;
-            if ($user->admin_pub_priv):
+            if ($app->user->admin_pub_priv):
 ?>
                                 <li><a href='/admin/articles.php'>Articles</a></li>
 <?php
             endif;
-            if ($user->admin_forum_priv):
+            if ($app->user->admin_forum_priv):
 ?>
                                 <li><a href='/admin/forum.php'>Forum</a></li>
 <?php
@@ -113,20 +124,22 @@
                         <li class='right icon'><a class='nav-extra nav-extra-pm' href='/inbox/'><i class="icon-envelope-alt"></i><span class='notification-counter' id='pm-counter'>1</span></a></li>
                         <li class='right icon nav-extra-events-cont'><a class='nav-extra nav-extra-events' href='/alerts.php'><i class="icon-globe"></i><span class='notification-counter' id='event-counter'>1</span></a></li>
                         <li class='right icon mobile-hide nav-search'>
-                            <input placeholder='Search: topic, user, level..'/>
-                            <a href='#'><i class='icon-search'></i></a>
+                            <form action='/search.php' method='get'>
+                                <input placeholder='Search: topic, user, level..' name='q'/>
+                                <a href='#' onclick="$(this).parent().submit();"><i class='icon-search'></i></a>
+                            </form>
                         </li>
 <?php
     elseif (defined('_SIDEBAR') && !_SIDEBAR): // right, if not logged in
 ?>
-                        <li class='right nav-extra-login-item <?=isset($user->login_error)?'active':'';?>'><a class='nav-extra nav-extra-login' href='/' <?=(isset($user->login_error))?"data-error='{$user->login_error}'":'';?>>Login</a></li>
-                        <li class='right nav-extra-register-item <?=isset($user->reg_error)?'active':'';?>'><a class='nav-extra nav-extra-register' href='/' <?=(isset($user->reg_error))?"data-error='{$user->reg_error}'":'';?>>Register</a></li>
+                        <li class='right nav-extra-login-item <?=isset($app->user->login_error)?'active':'';?>'><a class='nav-extra nav-extra-login' href='/' <?=(isset($app->user->login_error))?"data-error='{$app->user->login_error}'":'';?>>Login</a></li>
+                        <li class='right nav-extra-register-item <?=isset($app->user->reg_error)?'active':'';?>'><a class='nav-extra nav-extra-register' href='/' <?=(isset($app->user->reg_error))?"data-error='{$app->user->reg_error}'":'';?>>Register</a></li>
 <?php
     endif;
 ?>
                     </ul>
 <?php
-    if ($user->loggedIn):
+    if ($app->user->loggedIn):
 ?>
                     <div id='nav-extra-dropdown'>
                         Hey there :)

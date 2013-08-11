@@ -1,0 +1,52 @@
+ul.users-list {
+    list-style: none;
+    margin-bottom: 16px;
+
+    li {
+        margin-right: 6px;
+        float: left;
+
+        figure {
+            position: relative;
+            margin-bottom: 2px;
+
+            img {
+                display: block;
+                width: 48px;
+                position: absolute;
+                top: 4px;
+                left: 4px;
+            }
+
+            /* HOVER STYLE BELOW BLOCK */
+
+            figcaption {
+                width: auto;
+                height: 56px;
+                background: $light_bg;
+                overflow: hidden;
+                white-space: nowrap;
+                padding: 5px 12px 6px 60px;
+                font-size: 0.9em;
+
+                &:hover {
+                    background: $lighter_bg;
+                }
+
+                a {
+                    font-weight: bold;
+                    color: $white;
+                }
+            }
+        }
+    }
+}
+
+article.article header {
+    margin-bottom: 6px;
+
+    h2 {
+        margin: 0px;
+        font-size: 1.2em;
+    }
+}
